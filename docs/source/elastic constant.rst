@@ -32,12 +32,12 @@ The elastic constant will be calculated for different volumes
 
      qlaunch singleshot
 
-- Recheck the workflow and make the sure state changing to "state": "RUNNING
+- Recheck the workflow and make the sure state changing to "state": "RUNNING"
 
 .. code-block:: bash
 
      lpad get_wflows
-     
+          
 - Check the elastic constant result on MongoDB database
 
 
