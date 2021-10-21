@@ -40,4 +40,6 @@ The elastic constant will be calculated for different volumes
           
 - Check the elastic constant result on MongoDB database
 
+.. image:: _static/elastic_constant_result_MongoDB_result.png
 
+Note: In the elastisity collection, under the elastic_tensor/raw/0 folder, 0 represents the C11 elastis constant and 1 represents C12 elastic constant etc. Unit(Gpa) 
