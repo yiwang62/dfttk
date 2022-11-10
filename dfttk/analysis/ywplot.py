@@ -2390,7 +2390,6 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
               natom = len(structure.sites)
               sa = SpacegroupAnalyzer(structure)
               ngroup = sa.get_space_group_number()
-              print("xxxxxxxxxxxxx", ngroup)
 
   #print(natom,ngroup)
   i1 = 0
