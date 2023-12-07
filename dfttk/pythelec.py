@@ -1923,6 +1923,13 @@ class thelecMDB():
         val, idx = min((val, idx) for (idx, val) in enumerate(_energies))
         iB = max(0, idx-3)
         iE = min(len(_energies), idx+4)
+        if _volumes[iE-1]/_volumes[idx] < 1.15: 
+            iE = len(_energies)
+            for ii in range(idx, iE):
+                if _volumes[ii]/_volumes[idx] > 1.15:
+                    iE = ii + 1
+                    break
+
         self.energies = _energies[iB:iE]
         self.dos_objs = _dos_objs[iB:iE]
         self.dirs = _dirs[iB:iE]
