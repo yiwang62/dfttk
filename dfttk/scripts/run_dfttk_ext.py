@@ -97,12 +97,12 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
         else:
             from dfttk.analysis.ywplot import plotAPI
             if plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
-                formula = proc.get_formula(), debug=args.debug,
+                formula = proc.get_formula(), debug=args.debug, timeout=args.timeout,
                 plotlabel=args.plot, local=args.local):
                 vtof = proc.get_free_energy_for_plot(readme)
                 if vtof is not None:
                     plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
-                    formula = proc.get_formula(), vtof=vtof, plotlabel=args.plot)
+                    formula = proc.get_formula(), vtof=vtof, plotlabel=args.plot, timeout=args.timeout)
         record_cmd_print(thermofile, readme)
     elif no_MongoDB:
             print("\n*********WARNING: CANNOT get MongoDB service, so I will proceed using local data")
@@ -329,6 +329,9 @@ def shared_aguments(pthelec):
     pthelec.add_argument("-nT", "--nT", dest="nT", nargs="?", type=int, default=257,
                       help="number of temperatures, used together with -td -50. \n"
                            "Default: 257")
+    pthelec.add_argument("-timeout", "--timeout", dest="timeout", nargs="?", type=int, default=None,
+                      help="time limit for subprocess, default -1 means no time limit \n"
+                           "Default: None")
     pthelec.add_argument("-e", "--everyT", dest="everyT", nargs="?", type=int, default=1,
                       help="number of temperature points skipped from QHA analysis from the qha/qha_phonon collection. \n"
                            "Default: 1")

@@ -1680,8 +1680,8 @@ class BornMix:
         fp.write('\n')
 
     def mix(self, line0, line1, ff1, fp):
-        ss0 = [f.strip() for f in line0.split(' ') if f!='']
-        ss1 = [f.strip() for f in line1.split(' ') if f!='']
+        ss0 = [f.strip() for f in line0.replace('\t', ' ').split(' ') if f!='']
+        ss1 = [f.strip() for f in line1.replace('\t', ' ').split(' ') if f!='']
         if len(ss0) >= 4:
             if ss0[3] in periodictable and ss0[3] in periodictable: self.sitemix(ss0, ss1, ff1, fp)
             else: self.simplemix(ss0, ss1, ff1, fp)
@@ -1778,7 +1778,7 @@ def Phonon298(dir0, pvdos=False):
       cmd = 'timeout 6 pos2s Symmetry.pos -THR 3.e-4 >&symmetry.out'
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
-      print(output)
+      #print(output)
 
     Gph = os.path.exists("symmetry.mode")
     if Gph:
@@ -1931,7 +1931,7 @@ def getdoslim(e, dos, xlim):
 def plotAPI(readme, thermofile, volumes=None, energies=None,
     expt=None, xlim=None, _fitCp=True,
     formula=None, debug=False, vtof=None, poscar=None, vdos=None,
-    doscar=None, natoms=1, plotlabel=None, local=None):
+    doscar=None, natoms=1, plotlabel=None, local=None, timeout=None):
   if plotlabel!=None:
       if plotlabel.lower().startswith("find_or_"):
           if "pseudo_potential" in readme.keys():
@@ -2036,8 +2036,10 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       g = g[ix:]
       t = t[ix:]
       thermoplot(folder,"Gruneisen coefficient",list(t),list(g), yzero=Gmin, expt=expt, xlim=xlim, label=plotlabel, single=vdos!=None,plottitle=plottitle)
+      Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local, timeout=timeout)
       try:
-        Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local)
+        #Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local)
+        pass
       except:
         pass
     else:
@@ -2046,7 +2048,7 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       try:
         f2=interp1d(thermo[:,0], thermo[:,1])
         V0 = f2(0)
-        Plot298(folder, V0, volumes, debug=debug)
+        Plot298(folder, V0, volumes, debug=debug, timeout=timeout)
       except:
         pass
   elif vdos!=None:
@@ -2413,7 +2415,7 @@ def plotRaman(folder, fp, vdos, plottitle=None):
     fn = "Gamma_point_phonons.png"
     move(fn, os.path.join(folder,fn))
 
-def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
+def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, timeout=None):
   import dfttk.scripts.config_dfttk as dfttkconfig
   PATH_TO_STORE_CONFIG = dfttkconfig.default_path()
   plotdatabase = os.path.join(dfttkconfig.get_abspath(PATH_TO_STORE_CONFIG),'analysis','database')
@@ -2434,7 +2436,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
         vol = 'V{:010.6f}'.format(structure.volume)
         vdict[vol]=dir
         oszicar = os.path.join(ydir,dir, 'OSZICAR')
-        if not os.path.exists(poscar): continue
+        if not os.path.exists(oszicar): continue
         with open(oszicar,"r") as fp:
           lines = fp.readlines()
           for line in lines:
@@ -2491,8 +2493,9 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
   if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
   #cmd = "Yphon -tranI 2 -eps " + " <superfij.out"
   if not (debug and os.path.exists('vdos.out')):
+    try:
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    universal_newlines=True)
+                    universal_newlines=True, timeout=timeout)
       #print(output)
       cmd = "gnuplot vdos.plt; convert -flatten -rotate 90 -density 120x120 vdos.eps vdos.png"
       #cmd = " vdos.plt"
@@ -2501,13 +2504,15 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
       #copyfile("vdos.png", folder+'/vdos298.15.png')
       move("vdos.eps", os.path.join(cwd,folder,'vdos298.15.eps'))
       move("vdos.png", os.path.join(cwd,folder,'vdos298.15.png'))
+    except subprocess.TimeoutExpired:
+      print(f'Timeout for {cmd} ({timeout}s) expired')
 
   if not os.path.exists('symmetry.mode'):
     if platform.system()=="Linux":
       cmd = "pos2s Symmetry.pos -THR 0.001"
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
-      print(output)
+      #print(output)
   """
   #temp for debug
   """
@@ -2551,14 +2556,17 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
     copyfile(dfile,dfile0)
     cmd = "Yphon -tranI 2 -eps -pdis "+dfile0+ " <superfij.out"
     if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
-    output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                      universal_newlines=True)
-    #print(output)
-    cmd = "gnuplot vdis.plt; convert -flatten -rotate 90 -density 120x120 vdis.eps vdis.png"
-    #cmd = gnuplot_cmd+" vdis.plt"
-    plot(cmd)
-    move("vdis.eps", os.path.join(cwd,folder,'vdis298.15.eps'))
-    move("vdis.png", os.path.join(cwd,folder,'vdis298.15.png'))
+    try:
+      output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                        universal_newlines=True, timeout=timeout)
+      #print(output)
+      cmd = "gnuplot vdis.plt; convert -flatten -rotate 90 -density 120x120 vdis.eps vdis.png"
+      #cmd = gnuplot_cmd+" vdis.plt"
+      plot(cmd)
+      move("vdis.eps", os.path.join(cwd,folder,'vdis298.15.eps'))
+      move("vdis.png", os.path.join(cwd,folder,'vdis298.15.png'))
+    except subprocess.TimeoutExpired:
+      print(f'Timeout for {cmd} ({timeout}s) expired')
   os.chdir( cwd )
 
 
