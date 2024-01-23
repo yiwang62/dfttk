@@ -1139,7 +1139,7 @@ def Genergy(thermofile,dir0):
   vdos_e_Cij = '/'.join(tmp)
   #print("Cij",vdos_e_Cij)
   if os.path.exists(vdos_e_Cij) :
-    vdos_e_Cij = np.loadtxt(vdos_e_Cij, comments="#", dtype=np.float)
+    vdos_e_Cij = np.loadtxt(vdos_e_Cij, comments="#", dtype=float)
     ij = 0
     for i in range(1,7):
       for j in range(i,7):
@@ -1152,7 +1152,7 @@ def Genergy(thermofile,dir0):
     sys.exit()
 
 
-  thermo = np.loadtxt(thermofile, comments="#", dtype=np.float)
+  thermo = np.loadtxt(thermofile, comments="#", dtype=float)
   thermo[np.isnan(thermo)] = 0.0
   for i,cp in enumerate(thermo[:,6]):
     if cp > CpMax: break
@@ -2164,7 +2164,7 @@ def plotCMD(thermofile, volumes=None, energies=None, expt=None, xlim=None, _fitC
     os.mkdir(folder)
   if volumes is not None: thermoplot(folder,"0 K total energies (eV/atom)",volumes, energies)
 
-  thermo = np.loadtxt(thermofile, comments="#", dtype=np.float)
+  thermo = np.loadtxt(thermofile, comments="#", dtype=float)
   thermo[np.isnan(thermo)] = 0.0
   if len (thermo) < 1:
       print("\nCorrupted thermofile for", thermofile, "Please check it!")
@@ -2526,7 +2526,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
                     universal_newlines=True)
     #print(output)
     move("vdos.sav", 'vdos.out')
-    vdos = np.loadtxt("vdos.out", comments="#", dtype=np.float)
+    vdos = np.loadtxt("vdos.out", comments="#", dtype=float)
     if os.path.exists("Raman.mode") :
       with open ("Raman.mode", "r") as fp:
         plotRaman(os.path.join(cwd,folder), fp, vdos, plottitle=plottitle)
@@ -2623,7 +2623,7 @@ def PlotVol(folder, vdosdir):
                     universal_newlines=True)
     #print(output)
     move("vdos.sav", 'vdos.out')
-    vdos = np.loadtxt("vdos.out", comments="#", dtype=np.float)
+    vdos = np.loadtxt("vdos.out", comments="#", dtype=float)
     if os.path.exists("Raman.mode") :
       with open ("Raman.mode", "r") as fp:
         plotRaman(cwd,folder, fp, vdos)
