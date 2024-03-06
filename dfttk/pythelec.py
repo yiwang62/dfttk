@@ -1059,6 +1059,7 @@ class thelecMDB():
         self.fitF=fitF
         self.k_ph_mode = args.k_ph_mode
         self.force_constant_factor = 1.0
+        self.vidxup = args.vidxup
 
         if self.debug:
             if self.dope==0.0: self.dope=-1.e-5
@@ -1923,10 +1924,10 @@ class thelecMDB():
         val, idx = min((val, idx) for (idx, val) in enumerate(_energies))
         iB = max(0, idx-3)
         iE = min(len(_energies), idx+4)
-        if _volumes[iE-1]/_volumes[idx] < 1.15: 
+        if _volumes[iE-1]/_volumes[idx] < self.vidxup: 
             iE = len(_energies)
             for ii in range(idx, iE):
-                if _volumes[ii]/_volumes[idx] > 1.15:
+                if _volumes[ii]/_volumes[idx] > self.vidxup:
                     iE = ii + 1
                     break
 

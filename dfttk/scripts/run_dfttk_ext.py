@@ -317,6 +317,9 @@ def shared_aguments(pthelec):
     pthelec.add_argument("-ne", "--ndosmx", dest="ndosmx", nargs="?", type=int, default=10001,
                       help="new eDOS mesh. It recommend increase it 100001 if numberical instability seen. \n"
                            "Default: 10001 if dope >5.e-9 or 100001")
+    pthelec.add_argument("-vidxup", "--vidxup", dest="vidxup", nargs="?", type=float, default=1.15,
+                      help="up volume points from the energy mininum. The purpose is to exclude ireasonabel energy points\n"
+                           "Default: 1.15")
     pthelec.add_argument("-gauss", "--gauss", dest="gaussian", nargs="?", type=float, default=1000.,
                       help="densing factor for eDOS mesh near the Fermi energy. \n"
                            "Default: 1000")
