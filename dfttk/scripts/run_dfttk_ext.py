@@ -98,11 +98,11 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
             from dfttk.analysis.ywplot import plotAPI
             if plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
                 formula = proc.get_formula(), debug=args.debug, timeout=args.timeout,
-                plotlabel=args.plot, local=args.local):
+                plotlabel=args.plot, local=args.local, plot298=args.plot298):
                 vtof = proc.get_free_energy_for_plot(readme)
                 if vtof is not None:
                     plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
-                    formula = proc.get_formula(), vtof=vtof, plotlabel=args.plot, timeout=args.timeout)
+                    formula = proc.get_formula(), vtof=vtof, plotlabel=args.plot, timeout=args.timeout, plot298=args.plot298)
         record_cmd_print(thermofile, readme)
     elif no_MongoDB:
             print("\n*********WARNING: CANNOT get MongoDB service, so I will proceed using local data")
@@ -297,6 +297,9 @@ def shared_aguments(pthelec):
                            "Default: False")
     pthelec.add_argument("-db_renew", "--db_renew", dest="db_renew", action='store_true', default=False,
                       help="renew the database. \n"
+                           "Default: False")
+    pthelec.add_argument("-plot298", "--plot298", dest="plot298", action='store_true', default=False,
+                      help="plot 298K phonon dispersion. Sometimes it takes too long, I truned off by default.\n"
                            "Default: False")
     pthelec.add_argument("-T1", "-t1", dest="t1", nargs="?", type=float, default=4000,
                       help="High temperature limit. \n"
