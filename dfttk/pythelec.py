@@ -1914,6 +1914,10 @@ class thelecMDB():
 
         # sort everything in volume order
         # note that we are doing volume last because it is the thing we are sorting by!
+        if len(volumes) < len(static_calculations):
+            if not self.noel:
+                print("***** I found the length of volumes is:", len(volumes), " if not -noel is set, make sure static calculations are done")
+        
 
         from dfttk.utils import sort_x_by_y
         _energies = sort_x_by_y(energies, volumes)

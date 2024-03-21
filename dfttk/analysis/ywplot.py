@@ -1931,7 +1931,7 @@ def getdoslim(e, dos, xlim):
 def plotAPI(readme, thermofile, volumes=None, energies=None,
     expt=None, xlim=None, _fitCp=True,
     formula=None, debug=False, vtof=None, poscar=None, vdos=None,
-    doscar=None, natoms=1, plotlabel=None, local=None, timeout=None):
+    doscar=None, natoms=1, plotlabel=None, local=None, timeout=None, plot298=False):
   if plotlabel!=None:
       if plotlabel.lower().startswith("find_or_"):
           if "pseudo_potential" in readme.keys():
@@ -2036,7 +2036,7 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       g = g[ix:]
       t = t[ix:]
       thermoplot(folder,"Gruneisen coefficient",list(t),list(g), yzero=Gmin, expt=expt, xlim=xlim, label=plotlabel, single=vdos!=None,plottitle=plottitle)
-      Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local, timeout=timeout)
+      if plot298: Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local, timeout=timeout)
       try:
         #Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local)
         pass
@@ -2048,7 +2048,7 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       try:
         f2=interp1d(thermo[:,0], thermo[:,1])
         V0 = f2(0)
-        Plot298(folder, V0, volumes, debug=debug, timeout=timeout)
+        if plot298: Plot298(folder, V0, volumes, debug=debug, timeout=timeout)
       except:
         pass
   elif vdos!=None:
