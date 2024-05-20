@@ -7,7 +7,8 @@ from fractions import Fraction
 from dfttk.utils import sort_x_by_y
 import os
 import json
-from pymatgen.ext.matproj import MPRester, Structure
+from pymatgen.ext.matproj import MPRester
+from pymatgen.core import Structure
 from atomate.vasp.database import VaspCalcDb
 import xml.etree.ElementTree as ET
 
