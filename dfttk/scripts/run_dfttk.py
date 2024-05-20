@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # The template for batch run of DFTTK
 import argparse
-from pymatgen.ext.matproj import MPRester, Structure
+from pymatgen.ext.matproj import MPRester
+from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import Potcar, Incar
 from dfttk.wflows import get_wf_gibbs, get_wf_EV_bjb, get_wf_singleV, get_wf_crosscom, \
     get_wf_gibbs_robust, get_wf_borncharge, get_wf_elastic
