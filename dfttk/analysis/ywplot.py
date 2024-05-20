@@ -865,8 +865,6 @@ def plot_theory (theory, ax):
     #global mindex
     lindex = -1
     cindex = -1
-    n_lines = len(linestyles)
-    n_colors = len(colors)
     for rec in theory:
         try:
             xval = np.array(rec['x'])
@@ -903,6 +901,12 @@ def plot_expt (expt, prp, ax, CoT=False, xlim=None):
                     yval = lines[1::2]
                 except:
                     continue
+            ndata = len(xval)
+            if ndata > 30:
+                inc = ndata//30
+                xval = xval[::inc]
+                yval = yval[::inc]
+            #print ("nnnnnnnnnnnn=", ndata, "vvvvvvvvv=", len(xval)
             Author = rec['Author']
             Unit = rec['Unit']
             natom = rec['natom']
@@ -947,7 +951,7 @@ def plot_expt (expt, prp, ax, CoT=False, xlim=None):
                     """
                 else:
                     ax.plot(xx,yy, marker=markers[mindex%len(markers)], markersize=8,
-                        linestyle='None', label=Author.split(',')[0])
+                        linestyle='None', color=colors[mindex%n_colors],label=Author.split(',')[0])
                 ymax = max(yy.max(), ymax)
             mindex += 1
     return ymax
@@ -1135,7 +1139,7 @@ def Genergy(thermofile,dir0):
   vdos_e_Cij = '/'.join(tmp)
   #print("Cij",vdos_e_Cij)
   if os.path.exists(vdos_e_Cij) :
-    vdos_e_Cij = np.loadtxt(vdos_e_Cij, comments="#", dtype=np.float)
+    vdos_e_Cij = np.loadtxt(vdos_e_Cij, comments="#", dtype=float)
     ij = 0
     for i in range(1,7):
       for j in range(i,7):
@@ -1148,7 +1152,7 @@ def Genergy(thermofile,dir0):
     sys.exit()
 
 
-  thermo = np.loadtxt(thermofile, comments="#", dtype=np.float)
+  thermo = np.loadtxt(thermofile, comments="#", dtype=float)
   thermo[np.isnan(thermo)] = 0.0
   for i,cp in enumerate(thermo[:,6]):
     if cp > CpMax: break
@@ -1676,8 +1680,8 @@ class BornMix:
         fp.write('\n')
 
     def mix(self, line0, line1, ff1, fp):
-        ss0 = [f.strip() for f in line0.split(' ') if f!='']
-        ss1 = [f.strip() for f in line1.split(' ') if f!='']
+        ss0 = [f.strip() for f in line0.replace('\t', ' ').split(' ') if f!='']
+        ss1 = [f.strip() for f in line1.replace('\t', ' ').split(' ') if f!='']
         if len(ss0) >= 4:
             if ss0[3] in periodictable and ss0[3] in periodictable: self.sitemix(ss0, ss1, ff1, fp)
             else: self.simplemix(ss0, ss1, ff1, fp)
@@ -1774,7 +1778,7 @@ def Phonon298(dir0, pvdos=False):
       cmd = 'timeout 6 pos2s Symmetry.pos -THR 3.e-4 >&symmetry.out'
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
-      print(output)
+      #print(output)
 
     Gph = os.path.exists("symmetry.mode")
     if Gph:
@@ -1845,8 +1849,31 @@ def addpapers(g,formula,pname):
 
 markers=['o', 'v', 'd', '^', '<', '>', 's', '*', 'x', '+', '1', '2']
 colors=('k', 'b', 'r', 'c', 'm', 'g', 'y')
-linestyles = ['-', '--', '-.', ':', '.', ',', 'o', '^', 'v', '<', '>', 's',
+"""
+linestyles = ['-', '--', '-.', ':', ',', 'o', '^', 'v', '<', '>', 's',
               '+', 'x', 'd', '1', '2', '3', '4', 'h', 'p', '|', '_', 'D', 'H']
+"""
+linestyle_tuple = [
+     ('solid', 'solid'),      # Same as (0, ()) or '-'
+     ('dotted', 'dotted'),    # Same as (0, (1, 1)) or ':'
+     ('dashed', 'dashed'),    # Same as '--'
+     ('dashdot', 'dashdot'),  # Same as '-.'
+     ('long dash with offset', (5, (10, 3))),
+     ('loosely dashed',        (0, (5, 10))),
+     ('dashed',                (0, (5, 5))),
+     ('densely dashed',        (0, (5, 1))),
+
+     ('loosely dashdotted',    (0, (3, 10, 1, 10))),
+     ('dashdotted',            (0, (3, 5, 1, 5))),
+     ('densely dashdotted',    (0, (3, 1, 1, 1))),
+
+     ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
+     ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+     ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+
+linestyles = [linestyle_tuple[i][1] for i, (name, linestyle) in enumerate(linestyle_tuple)]
+n_lines = len(linestyles)
+n_colors = len(colors)
 
 k_B = 8.6173303e-5
 R = 8.3144598
@@ -1904,7 +1931,7 @@ def getdoslim(e, dos, xlim):
 def plotAPI(readme, thermofile, volumes=None, energies=None,
     expt=None, xlim=None, _fitCp=True,
     formula=None, debug=False, vtof=None, poscar=None, vdos=None,
-    doscar=None, natoms=1, plotlabel=None, local=None):
+    doscar=None, natoms=1, plotlabel=None, local=None, timeout=None, plot298=False):
   if plotlabel!=None:
       if plotlabel.lower().startswith("find_or_"):
           if "pseudo_potential" in readme.keys():
@@ -2009,8 +2036,10 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       g = g[ix:]
       t = t[ix:]
       thermoplot(folder,"Gruneisen coefficient",list(t),list(g), yzero=Gmin, expt=expt, xlim=xlim, label=plotlabel, single=vdos!=None,plottitle=plottitle)
+      if plot298: Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local, timeout=timeout)
       try:
-        Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local)
+        #Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local)
+        pass
       except:
         pass
     else:
@@ -2019,7 +2048,7 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       try:
         f2=interp1d(thermo[:,0], thermo[:,1])
         V0 = f2(0)
-        Plot298(folder, V0, volumes, debug=debug)
+        if plot298: Plot298(folder, V0, volumes, debug=debug, timeout=timeout)
       except:
         pass
   elif vdos!=None:
@@ -2135,7 +2164,7 @@ def plotCMD(thermofile, volumes=None, energies=None, expt=None, xlim=None, _fitC
     os.mkdir(folder)
   if volumes is not None: thermoplot(folder,"0 K total energies (eV/atom)",volumes, energies)
 
-  thermo = np.loadtxt(thermofile, comments="#", dtype=np.float)
+  thermo = np.loadtxt(thermofile, comments="#", dtype=float)
   thermo[np.isnan(thermo)] = 0.0
   if len (thermo) < 1:
       print("\nCorrupted thermofile for", thermofile, "Please check it!")
@@ -2386,7 +2415,7 @@ def plotRaman(folder, fp, vdos, plottitle=None):
     fn = "Gamma_point_phonons.png"
     move(fn, os.path.join(folder,fn))
 
-def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
+def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, timeout=None):
   import dfttk.scripts.config_dfttk as dfttkconfig
   PATH_TO_STORE_CONFIG = dfttkconfig.default_path()
   plotdatabase = os.path.join(dfttkconfig.get_abspath(PATH_TO_STORE_CONFIG),'analysis','database')
@@ -2407,7 +2436,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
         vol = 'V{:010.6f}'.format(structure.volume)
         vdict[vol]=dir
         oszicar = os.path.join(ydir,dir, 'OSZICAR')
-        if not os.path.exists(poscar): continue
+        if not os.path.exists(oszicar): continue
         with open(oszicar,"r") as fp:
           lines = fp.readlines()
           for line in lines:
@@ -2464,8 +2493,9 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
   if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
   #cmd = "Yphon -tranI 2 -eps " + " <superfij.out"
   if not (debug and os.path.exists('vdos.out')):
+    try:
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    universal_newlines=True)
+                    universal_newlines=True, timeout=timeout)
       #print(output)
       cmd = "gnuplot vdos.plt; convert -flatten -rotate 90 -density 120x120 vdos.eps vdos.png"
       #cmd = " vdos.plt"
@@ -2474,13 +2504,15 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
       #copyfile("vdos.png", folder+'/vdos298.15.png')
       move("vdos.eps", os.path.join(cwd,folder,'vdos298.15.eps'))
       move("vdos.png", os.path.join(cwd,folder,'vdos298.15.png'))
+    except subprocess.TimeoutExpired:
+      print(f'Timeout for {cmd} ({timeout}s) expired')
 
   if not os.path.exists('symmetry.mode'):
     if platform.system()=="Linux":
       cmd = "pos2s Symmetry.pos -THR 0.001"
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
-      print(output)
+      #print(output)
   """
   #temp for debug
   """
@@ -2494,7 +2526,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
                     universal_newlines=True)
     #print(output)
     move("vdos.sav", 'vdos.out')
-    vdos = np.loadtxt("vdos.out", comments="#", dtype=np.float)
+    vdos = np.loadtxt("vdos.out", comments="#", dtype=float)
     if os.path.exists("Raman.mode") :
       with open ("Raman.mode", "r") as fp:
         plotRaman(os.path.join(cwd,folder), fp, vdos, plottitle=plottitle)
@@ -2524,14 +2556,17 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None):
     copyfile(dfile,dfile0)
     cmd = "Yphon -tranI 2 -eps -pdis "+dfile0+ " <superfij.out"
     if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
-    output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                      universal_newlines=True)
-    #print(output)
-    cmd = "gnuplot vdis.plt; convert -flatten -rotate 90 -density 120x120 vdis.eps vdis.png"
-    #cmd = gnuplot_cmd+" vdis.plt"
-    plot(cmd)
-    move("vdis.eps", os.path.join(cwd,folder,'vdis298.15.eps'))
-    move("vdis.png", os.path.join(cwd,folder,'vdis298.15.png'))
+    try:
+      output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                        universal_newlines=True, timeout=timeout)
+      #print(output)
+      cmd = "gnuplot vdis.plt; convert -flatten -rotate 90 -density 120x120 vdis.eps vdis.png"
+      #cmd = gnuplot_cmd+" vdis.plt"
+      plot(cmd)
+      move("vdis.eps", os.path.join(cwd,folder,'vdis298.15.eps'))
+      move("vdis.png", os.path.join(cwd,folder,'vdis298.15.png'))
+    except subprocess.TimeoutExpired:
+      print(f'Timeout for {cmd} ({timeout}s) expired')
   os.chdir( cwd )
 
 
@@ -2588,7 +2623,7 @@ def PlotVol(folder, vdosdir):
                     universal_newlines=True)
     #print(output)
     move("vdos.sav", 'vdos.out')
-    vdos = np.loadtxt("vdos.out", comments="#", dtype=np.float)
+    vdos = np.loadtxt("vdos.out", comments="#", dtype=float)
     if os.path.exists("Raman.mode") :
       with open ("Raman.mode", "r") as fp:
         plotRaman(cwd,folder, fp, vdos)

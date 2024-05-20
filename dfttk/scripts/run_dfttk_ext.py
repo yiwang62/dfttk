@@ -97,12 +97,12 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
         else:
             from dfttk.analysis.ywplot import plotAPI
             if plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
-                formula = proc.get_formula(), debug=args.debug,
-                plotlabel=args.plot, local=args.local):
+                formula = proc.get_formula(), debug=args.debug, timeout=args.timeout,
+                plotlabel=args.plot, local=args.local, plot298=args.plot298):
                 vtof = proc.get_free_energy_for_plot(readme)
                 if vtof is not None:
                     plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
-                    formula = proc.get_formula(), vtof=vtof, plotlabel=args.plot)
+                    formula = proc.get_formula(), vtof=vtof, plotlabel=args.plot, timeout=args.timeout, plot298=args.plot298)
         record_cmd_print(thermofile, readme)
     elif no_MongoDB:
             print("\n*********WARNING: CANNOT get MongoDB service, so I will proceed using local data")
@@ -298,6 +298,9 @@ def shared_aguments(pthelec):
     pthelec.add_argument("-db_renew", "--db_renew", dest="db_renew", action='store_true', default=False,
                       help="renew the database. \n"
                            "Default: False")
+    pthelec.add_argument("-plot298", "--plot298", dest="plot298", action='store_true', default=False,
+                      help="plot 298K phonon dispersion. Sometimes it takes too long, I truned off by default.\n"
+                           "Default: False")
     pthelec.add_argument("-T1", "-t1", dest="t1", nargs="?", type=float, default=4000,
                       help="High temperature limit. \n"
                            "Default: 4000")
@@ -317,6 +320,9 @@ def shared_aguments(pthelec):
     pthelec.add_argument("-ne", "--ndosmx", dest="ndosmx", nargs="?", type=int, default=10001,
                       help="new eDOS mesh. It recommend increase it 100001 if numberical instability seen. \n"
                            "Default: 10001 if dope >5.e-9 or 100001")
+    pthelec.add_argument("-vidxup", "--vidxup", dest="vidxup", nargs="?", type=float, default=1.15,
+                      help="up volume points from the energy mininum. The purpose is to exclude ireasonabel energy points\n"
+                           "Default: 1.15")
     pthelec.add_argument("-gauss", "--gauss", dest="gaussian", nargs="?", type=float, default=1000.,
                       help="densing factor for eDOS mesh near the Fermi energy. \n"
                            "Default: 1000")
@@ -329,6 +335,9 @@ def shared_aguments(pthelec):
     pthelec.add_argument("-nT", "--nT", dest="nT", nargs="?", type=int, default=257,
                       help="number of temperatures, used together with -td -50. \n"
                            "Default: 257")
+    pthelec.add_argument("-timeout", "--timeout", dest="timeout", nargs="?", type=int, default=None,
+                      help="time limit for subprocess, default -1 means no time limit \n"
+                           "Default: None")
     pthelec.add_argument("-e", "--everyT", dest="everyT", nargs="?", type=int, default=1,
                       help="number of temperature points skipped from QHA analysis from the qha/qha_phonon collection. \n"
                            "Default: 1")
@@ -400,11 +409,14 @@ def shared_aguments(pthelec):
     pthelec.add_argument("-xlim", "-xlim", dest="xlim", nargs="?", type=float, default=None,
                       help="Up temperature limit for plot. \n"
                            "Default: None")
-    pthelec.add_argument("-dos", "--doscar", dest="doscar", nargs="?", type=str, default=None,
+    pthelec.add_argument("-dos", "-DOSCAR", dest="doscar", nargs="?", type=str, default="DOSCAR",
                       help="file path to DOSCAR file. Run thelec in single volume shot only. \n"
                            "Default: None")
-    pthelec.add_argument("-pos", "--poscar", dest="poscar", nargs="?", type=str, default=None,
-                      help="file path to POSCAR file. Run thelec in single volume shot only. \n"
+    pthelec.add_argument("-con", "-CONTCAR", dest="contcar", nargs="?", type=str, default="CONTCAR",
+                      help="file path to CONTCAR file. Run thelec in single volume shot only. \n"
+                           "Default: None")
+    pthelec.add_argument("-osz", "-OSZICAR", dest="oszicar", nargs="?", type=str, default="OSZICAR",
+                      help="file path to OSZICAR file. Run thelec in single volume shot only. \n"
                            "Default: None")
     pthelec.add_argument("-vdos", "--vdos", dest="vdos", nargs="?", type=str, default=None,
                       help="file path to phonon DOS file produced by Yphon. Run thelec in single volume shot only. \n"
