@@ -1835,8 +1835,7 @@ class thelecMDB():
         if not os.path.exists(yphondir): yphondir = self.local
     
         _, static_calculations, _ = next(walk(yphondir))
-        print("xxxxxxxxxxx", yphondir, static_calculations)
-
+     
         energies = []
         dirs = []
         volumes = []
@@ -1857,11 +1856,14 @@ class thelecMDB():
               poscar = os.path.join(yphondir, calc, self.poscar)
 
             if not self.noel :
-              if not os.path.exists(os.path.join(yphondir, calc, self.doscar)) : continue
+              if not os.path.exists(os.path.join(yphondir, calc, self.doscar)) :
+                self.doscar = "DOSCAR.gz" 
+                if not os.path.exists(os.path.join(yphondir, calc, self.doscar)) : continue
               if os.stat(os.path.join(yphondir, calc, self.doscar)).st_size < 3000: continue
 
             if not os.path.exists(os.path.join(yphondir, calc,self.oszicar)): continue
             oszicar = os.path.join(yphondir, calc, self.oszicar)
+
             eneval = ""
             with open(oszicar,"r") as fp:
                 lines = fp.readlines()
