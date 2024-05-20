@@ -6,7 +6,8 @@ these are more verbose """
 import fnmatch
 import os
 
-from pymatgen.ext.matproj import MPRester, Structure
+from pymatgen.ext.matproj import MPRester
+from pymatgen.core import Structure
 from pymatgen.io.vasp.inputs import Incar, Poscar, Potcar
 from pymatgen.io.vasp.outputs import Vasprun, Outcar
 from dfttk.analysis.relaxing import get_non_isotropic_strain, get_bond_distance_change
