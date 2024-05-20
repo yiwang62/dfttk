@@ -1833,9 +1833,9 @@ class thelecMDB():
     def find_static_calculations_local(self):
         yphondir = os.path.join(self.local,"Yphon")
         if not os.path.exists(yphondir): yphondir = self.local
-        print("xxxxxxxxxxx", yphondir)
-
+    
         _, static_calculations, _ = next(walk(yphondir))
+        print("xxxxxxxxxxx", yphondir, static_calculations)
 
         energies = []
         dirs = []
