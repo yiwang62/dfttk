@@ -55,4 +55,4 @@ setup(
            'dfttk = dfttk.scripts.run_dfttk:run_dfttk',
        ]
    }
-
+)
