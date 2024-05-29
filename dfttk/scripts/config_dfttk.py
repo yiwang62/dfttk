@@ -9,7 +9,8 @@ from pymatgen.io.vasp.inputs import PotcarSingle, Potcar
 from pymatgen.ext.matproj import MPRester
 from dfttk.utils import recursive_glob
 from monty.serialization import loadfn, dumpfn
-from monty.os.path import which
+#from monty.os.path import which
+from shutil import which
 import getpass
 import shutil
 import math
