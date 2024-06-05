@@ -1826,7 +1826,7 @@ class thelecMDB():
             v = i['calcs_reversed'][0]['vasp_version']
             if self.static_vasp_version is None: self.static_vasp_version = v
             elif v[0:3]!=self.static_vasp_version[0:3]:
-                print("\n***********FETAL messing up calculation! please remove:", self.tag, "\n")
+                print("\n***********WARNING! messing up calculation! please remove:", self.tag, "\n")
                 print("\n*********** between", v, "and", self.static_vasp_version)
         if self.static_vasp_version is not None:
             print("\nvasp version for the static calculation is:", self.static_vasp_version, " for ", self.tag, "\n")
