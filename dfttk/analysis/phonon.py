@@ -46,7 +46,7 @@ def get_f_vib_phonopy(structure, supercell_matrix, vasprun_path,
     force_constant_factor = 1.0
     if Version(code_version) >= Version('6.2.0'):
         force_constant_factor = 0.004091649655126895
-        if Version(phonopy.__version__) >= Version()'2.9.1'):
+        if Version(phonopy.__version__) >= Version('2.9.1'):
             force_constant_factor = 1.0
 
     # get the force constants from a vasprun.xml file
