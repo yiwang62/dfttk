@@ -1544,7 +1544,9 @@ class thelecMDB():
                     self.force_constant_factor = 0.004091649655126895
                 else:
                     self.force_constant_factor = 1.0
-
+            if self.force_constant_factor == 1.0 and self.static_vasp_version[0:3] >= '6.2':
+                self.force_constant_factor /= 0.004091649655126895
+            print("used force_constant_factor changed from", i['force_constant_factor'], "to ", self.force_constant_factor)
             #if i['volume'] not in self.volumes: 
             if not vol_within(i['volume'], self.volumes, thr=1.e-6):
                 print (i['volume'], "is not within", self.volumes)
@@ -1825,6 +1827,7 @@ class thelecMDB():
             if self.static_vasp_version is None: self.static_vasp_version = v
             elif v[0:3]!=self.static_vasp_version[0:3]:
                 print("\n***********FETAL messing up calculation! please remove:", self.tag, "\n")
+                print("\n*********** between", v, "and", self.static_vasp_version)
         if self.static_vasp_version is not None:
             print("\nvasp version for the static calculation is:", self.static_vasp_version, " for ", self.tag, "\n")
 
