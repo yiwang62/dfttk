@@ -1544,7 +1544,7 @@ class thelecMDB():
                     self.force_constant_factor = 0.004091649655126895
                 else:
                     self.force_constant_factor = 1.0
-            if self.force_constant_factor == 1.0 and self.static_vasp_version[0:3] >= '6.2':
+            if self.force_constant_factor == 1.0 and self.static_vasp_version[0:3] >= '6.3':
                 self.force_constant_factor /= 0.004091649655126895
             print("used force_constant_factor changed from", i['force_constant_factor'], "to ", self.force_constant_factor)
             #if i['volume'] not in self.volumes: 
