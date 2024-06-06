@@ -1167,8 +1167,9 @@ class thelecMDB():
                             hessian_matrix[ii*3+x, jj*3+y] = -force_constant_matrix[ii,jj,x,y]
 
             hessian_matrix *= self.force_constant_factor
+
             if self.force_constant_factor!=1.0: 
-                print ("\n force constant matrix has been rescaled by :", self.force_constant_factor)
+                print ("        force constant matrix has been rescaled by :", self.force_constant_factor)
 
             for xx in range(natoms*3):
                 for yy in range(natoms*3-1):
@@ -1540,13 +1541,29 @@ class thelecMDB():
                 if Version(self.static_vasp_version) >= Version('6.0.0') \
                     and Version(self.static_vasp_version) < Version('6.2.0'):
                     if self.force_constant_factor == 1.0:
-                        self.force_constant_factor /= 0.004091649655126895
+                        self.force_constant_factor = 1.0/0.004091649655126895
             except:
                 if Version(self.static_vasp_version) >= Version('6.2.0'):
                     self.force_constant_factor = 0.004091649655126895
                 else:
                     self.force_constant_factor = 1.0
+            #check if the force constant was wrongly scaled.
+            from dfttk.utils import eV_per_atom_to_J_per_mol
+            if float(i['S_vib'][0])==0.0:
+                TD = float(i['temperatures'][1])/(float(i['CV_vib'][1])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
+            else:
+                TD = float(i['temperatures'][0])/(float(i['CV_vib'][0])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
+            print("Low temperature Debye T=", TD)
+            if TD<50 and np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol/self.natoms>1:
+                print("\n************ force constants could have been wrongly scaled, I am correcting it")
+                self.force_constant_factor = 1.0/0.004091649655126895
+            else: print()
             """
+            if np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol/self.natoms>0.1:
+                print("\n************ force constants could have been wrongly scaled, I am correcting it")
+                self.force_constant_factor = 1.0/0.004091649655126895
+            else: print()
+            print(self.natoms, "data*********CV_vib", np.hstack(i['temperatures'])[0], np.hstack(i['F_vib'])[0], np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol, np.hstack(i['CV_vib'])[0]*eV_per_atom_to_J_per_mol, self.force_constant_factor)
             if self.force_constant_factor == 1.0 and self.static_vasp_version[0:3] >= '6.3':
                 self.force_constant_factor /= 0.004091649655126895
             print("used force_constant_factor changed from", i['force_constant_factor'], "to ", self.force_constant_factor)
