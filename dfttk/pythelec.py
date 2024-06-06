@@ -12,6 +12,7 @@ import math
 import copy
 import json
 import pickle
+from packaging.version import Version
 import numpy as np
 from scipy.constants import physical_constants
 import scipy.constants as scipy_constants 
@@ -1536,11 +1537,12 @@ class thelecMDB():
         for i in (self.vasp_db).db['phonon'].find({'metadata.tag': self.tag}):
             try:
                 self.force_constant_factor = i['force_constant_factor']
-                if self.static_vasp_version[0:1] >= '6' and self.static_vasp_version[0:3] < '6.2':
+                if Version(self.static_vasp_version) >= Version('6.0.0') 
+                    and Version(self.static_vasp_version) < Version('6.2.0'):
                     if self.force_constant_factor == 1.0:
                         self.force_constant_factor /= 0.004091649655126895
             except:
-                if self.static_vasp_version[0:3] >= '6.2':
+                if Version(self.static_vasp_version) >= Version('6.2.0'):
                     self.force_constant_factor = 0.004091649655126895
                 else:
                     self.force_constant_factor = 1.0
@@ -2212,7 +2214,7 @@ class thelecMDB():
                 try:
                     self.force_constant_factor = i['force_constant_factor']
                 except:
-                    if self.static_vasp_version[0:1] >= '6':
+                    if Version(self.static_vasp_version) >= Version('6.0.0'):
                         print("\n**************Warning! force constant may not compatible for :", self.tag, "by default phonopy with vasp6\n")
                         
 
