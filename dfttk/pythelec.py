@@ -1537,7 +1537,7 @@ class thelecMDB():
         for i in (self.vasp_db).db['phonon'].find({'metadata.tag': self.tag}):
             try:
                 self.force_constant_factor = i['force_constant_factor']
-                if Version(self.static_vasp_version) >= Version('6.0.0') 
+                if Version(self.static_vasp_version) >= Version('6.0.0'): 
                     and Version(self.static_vasp_version) < Version('6.2.0'):
                     if self.force_constant_factor == 1.0:
                         self.force_constant_factor /= 0.004091649655126895
