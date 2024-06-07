@@ -1077,6 +1077,7 @@ class thelecMDB():
             self.gruneisen_T1 = args.gruneisen_T1
             self.debye_T0 = args.debye_T0
             self.bp2gru=args.debye_gruneisen_x
+            self.ph_correction = args.ph_correction
 
         if self.vasp_db==None: self.pyphon=True
 
@@ -1548,16 +1549,20 @@ class thelecMDB():
                 else:
                     self.force_constant_factor = 1.0
             #check if the force constant was wrongly scaled.
-            from dfttk.utils import eV_per_atom_to_J_per_mol
-            if float(i['S_vib'][0])==0.0:
-                TD = float(i['temperatures'][1])/(float(i['CV_vib'][1])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
-            else:
-                TD = float(i['temperatures'][0])/(float(i['CV_vib'][0])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
-            if TD<50 and np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol/self.natoms>1:
-                print("\n************ wrong low temperature Debye T=", TD)
-                print("************ force constants could have been wrongly scaled, I am correcting it")
-                self.force_constant_factor = 1.0/0.004091649655126895
-            else: print()
+            if self.ph_correction:
+                from dfttk.utils import eV_per_atom_to_J_per_mol
+                if float(i['S_vib'][0])==0.0:
+                    TD = float(i['temperatures'][1])/(float(i['CV_vib'][1])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
+                    TD = get_debye_T_from_phonon_Cv(i['temperatures'][1], i['CV_vib'][1], TD, self.natoms, _td = 0.1*TD)
+                else:
+                    TD = float(i['temperatures'][0])/(float(i['CV_vib'][0])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
+                    TD = get_debye_T_from_phonon_Cv(i['temperatures'][0], i['CV_vib'][0], TD, self.natoms, _td = 0.1*TD)
+
+                if TD<50 and np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol/self.natoms>1:
+                    print("\n************ wrong low temperature Debye T=", TD)
+                    print("************ force constants could have been wrongly scaled, I am correcting it")
+                    self.force_constant_factor = 1.0/0.004091649655126895
+                else: print()
             """
             if np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol/self.natoms>0.1:
                 print("\n************ force constants could have been wrongly scaled, I am correcting it")
