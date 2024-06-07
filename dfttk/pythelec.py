@@ -1095,7 +1095,7 @@ class thelecMDB():
         voldir = os.path.join(phdir,vol)
         if not os.path.exists(voldir):
             os.mkdir(voldir)
-        elif os.path.exists(os.path.join(voldir,'superfij.out')): return voldir
+        elif not self.refresh and os.path.exists(os.path.join(voldir,'superfij.out')): return voldir
 
         poscar = structure.to(fmt="poscar")
         unitcell_l = str(poscar).split('\n')
@@ -2440,6 +2440,7 @@ class thelecMDB():
                         if self.blat[i] < 0:
                             nT = i
                             print ("\nat point1 blat<0! Perhaps it has reached the upvolume limit at T =", self.T[i], "\n")
+                            print ("one can try to use the option -ph_correction -refresh to see if it is due to wrong force constants scaling")
                             break
                 """
                     _beta = copy.deepcopy(self.beta)
@@ -2493,6 +2494,7 @@ class thelecMDB():
                     if blat < 0:
                         self.TupLimit = self.T[i-1]
                         print ("\nat point2: blat<0! Perhaps it has reached the upvolume limit at T =", self.T[i], "\n")
+                        print ("one can try to use the option -ph_correction -refresh to see if it is due to wrong force constants scaling")
                         break
                     try:
                         slat = interp1d(self.volumes, self.Slat[:,i])(self.volT[i])
@@ -2503,6 +2505,7 @@ class thelecMDB():
                     except:
                         self.TupLimit = self.T[i-1]
                         print ("\nat pooint3: Perhaps it has reached the upvolume limit at T =", self.T[i], "\n")
+                        print ("one can try to use the option -ph_correction -refresh to see if it is due to wrong force constants scaling")
                         break
                 #print("T=",self.T[i], "Bulk Modulus=", blat*toGPa, "Veq=", self.volT[i])
                 prp_T = np.zeros((self.theall.shape[0]))

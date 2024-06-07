@@ -96,6 +96,9 @@ def getdos(f,natom_Static=None): # Line 186
     natom = int(quality+0.5)//3
     if natom_Static is not None:
         natom = natom_Static
+    if quality<=0.0:
+        print ("***********Wrong phonon data! one can try to use the option -ph_correction -refresh to see if it is due to wrong force constants scaling")
+        sys.exit()
     quality = good/quality
     pnew = 3*natom/good*np.array(pnew)
 
