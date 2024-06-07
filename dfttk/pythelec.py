@@ -1553,9 +1553,9 @@ class thelecMDB():
                 TD = float(i['temperatures'][1])/(float(i['CV_vib'][1])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
             else:
                 TD = float(i['temperatures'][0])/(float(i['CV_vib'][0])/self.natoms*eV_per_atom_to_J_per_mol/234/8.31)**(1.0/3.0)
-            print("Low temperature Debye T=", TD)
             if TD<50 and np.hstack(i['S_vib'])[0]*eV_per_atom_to_J_per_mol/self.natoms>1:
-                print("\n************ force constants could have been wrongly scaled, I am correcting it")
+                print("\n************ wrong low temperature Debye T=", TD)
+                print("************ force constants could have been wrongly scaled, I am correcting it")
                 self.force_constant_factor = 1.0/0.004091649655126895
             else: print()
             """
