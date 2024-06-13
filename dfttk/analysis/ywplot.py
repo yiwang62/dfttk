@@ -529,7 +529,6 @@ def proStoichiometricCp():
           i0 = i
       ifit0 = i0
       ifit0 = max(ifit0,0)
-      #print("xxxxxxxx=",x[ifit0:],T0)
       c,cerror = fitStoichiometricCp(x[ifit0:],y[ifit0:])
 
       y = zthermo.get("enthalpy (J/mol-atom)")
@@ -2036,6 +2035,7 @@ def plotAPI(readme, thermofile, volumes=None, energies=None,
       g = g[ix:]
       t = t[ix:]
       thermoplot(folder,"Gruneisen coefficient",list(t),list(g), yzero=Gmin, expt=expt, xlim=xlim, label=plotlabel, single=vdos!=None,plottitle=plottitle)
+      #print ("xxxxxxx", plot298)
       if plot298: Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local, timeout=timeout)
       try:
         #Plot298(folder, V298, volumes, debug=debug, plottitle=plottitle, local=local)

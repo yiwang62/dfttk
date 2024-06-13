@@ -137,7 +137,7 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
         readme={}
         from dfttk.analysis.ywplot import plotAPI
         plotAPI(readme, thermofile, None, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
-            formula = formula, vtof=None, plotlabel=args.plot)
+            formula = formula, vtof=None, plotlabel=args.plotp, plot298=args.plot298)
     elif vasp_db==None and plotfiles!=None:
         metatag, thermofile, volumes, energies, dir, formula = plotfiles
         sys.stdout.write('Processing {}, dir: {}, formula: {}\n'.format(metatag, dir, formula))
@@ -165,7 +165,7 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
             from dfttk.analysis.ywplot import plotAPI
             if plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
                 formula = proc.get_formula(), debug=args.debug,
-                plotlabel=args.plot):
+                plotlabel=args.plot, plot298=args.plot298):
                 vtof = proc.get_free_energy_for_plot(readme)
                 if vtof is not None:
                     plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
@@ -199,7 +199,7 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
             from dfttk.analysis.ywplot import plotAPI
             if plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
                 formula = proc.get_formula(), debug=args.debug,
-                plotlabel=args.plot):
+                plotlabel=args.plot, plot298=args.plot298):
                 vtof = proc.get_free_energy_for_plot(readme)
                 if vtof is not None:
                     plotAPI(readme, thermofile, volumes, energies, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
@@ -221,7 +221,7 @@ def ext_thelec(args, plotfiles=None, vasp_db=None):
             from dfttk.analysis.ywplot import plotAPI
             if plotAPI(readme, thermofile, None, None, expt=expt, xlim=xlim, _fitCp=args.SGTEfitCp,
                 formula = proc.get_formula(), debug=args.debug,
-                poscar=args.poscar,vdos=args.vdos, doscar=args.doscar, natoms=natoms, plotlabel=args.plot):
+                poscar=args.poscar,vdos=args.vdos, doscar=args.doscar, natoms=natoms, plotlabel=args.plot, plot298=args.plot298):
                 record_cmd_print(thermofile, readme)
     elif args.local == "":
         pythelec.thelecAPI(t0, t1, td, xdn, xup, dope, ndosmx, gaussian, natom, outf, doscar)
