@@ -556,8 +556,8 @@ def supercell_scaling_by_Yphon(structure, supercellsize=64):
         universal_newlines=True)
     with open ("pMatrix", "r") as f : line = f.readline()
     m = np.array([int(x) for x in line.split(' ') if x!='']).reshape((3, 3))
-    os.remove("t.m.p.POSCAR")
-    os.remove("pMatrix")
+    if os.path.exists("t.m.p.POSCAR") : os.remove("t.m.p.POSCAR")
+    if os.path.exists("pMatrix"): os.remove("pMatrix")
     return m
 
 
