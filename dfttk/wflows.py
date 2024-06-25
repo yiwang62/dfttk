@@ -23,6 +23,7 @@ from dfttk.scripts.querydb import is_property_exist_in_db, get_eq_structure_by_m
 from dfttk.elasticity.elastic import get_wf_elastic_constant
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 import sys
+import random
 
 
 from pymatgen.core import Structure
@@ -550,13 +551,14 @@ def get_wf_borncharge(structure=None, metadata=None, db_file=None, isif=2, name=
 
 import subprocess
 def supercell_scaling_by_Yphon(structure, supercellsize=64):
-    structure.to(filename='t.m.p.POSCAR')
-    cmd = "Ycell -SN " + str(supercellsize) +" <t.m.p.POSCAR"
+    random_poscar = ''.join(random.choices(string.ascii_letters + string.digits, k=10)) + ".POSCAR"
+    structure.to(filename=random_poscar)
+    cmd = "Ycell -SN " + str(supercellsize) +" <" + random_poscar
     output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         universal_newlines=True)
     with open ("pMatrix", "r") as f : line = f.readline()
     m = np.array([int(x) for x in line.split(' ') if x!='']).reshape((3, 3))
-    if os.path.exists("t.m.p.POSCAR") : os.remove("t.m.p.POSCAR")
+    if os.path.exists(random_poscar) : os.remove(random_poscar)
     if os.path.exists("pMatrix"): os.remove("pMatrix")
     return m
 
