@@ -1442,6 +1442,7 @@ class thelecMDB():
         for i,dd in enumerate(sorted(dirs)):
             poscar = os.path.join(localdir, dd, "POSCAR")
             if not os.path.exists(poscar): continue
+            if not dd.startswith("V"): continue
             Cij = os.path.join(localdir, dd, "Cij.out")
             if not os.path.exists(Cij): 
                 Cij = os.path.join(localdir, dd, "Cij.out_Relax")
@@ -1455,6 +1456,13 @@ class thelecMDB():
             Cij = []
             for line in lines:
                 Cij.append([float(cij) for cij in line.split() if cij.strip()!=""])
+            if len(Cij)!=6: continue
+            has_Cij = True
+            for cij in Cij:
+                if len(cij)==6: continue
+                has_Cij = False
+                break
+            if not has_Cij: continue
 
             self.Cij.append(Cij)
             self.VCij.append(vol)
