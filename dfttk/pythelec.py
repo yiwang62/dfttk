@@ -1441,6 +1441,7 @@ class thelecMDB():
         _, dirs, _ = next(os.walk(localdir))
         for i,dd in enumerate(sorted(dirs)):
             poscar = os.path.join(localdir, dd, "POSCAR")
+            if not os.path.exists(poscar): poscar = os.path.join(localdir, dd, "CONTCAR")
             if not os.path.exists(poscar): continue
             if not dd.startswith("V"): continue
             Cij = os.path.join(localdir, dd, "Cij.out")
