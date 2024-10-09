@@ -1892,6 +1892,19 @@ class thelecMDB():
               poscar = os.path.join(yphondir, calc, 'CONTCAR.dfttk')
             else:
               poscar = os.path.join(yphondir, calc, self.poscar)
+            try: 
+                structure = Structure.from_file(poscar)
+            except:
+                with open(poscar,"r") as fp:
+                    lines = fp.readlines()
+                poscar = os.path.join(yphondir, calc, 'CONTCAR.dfttk')
+                with open(poscar,"w") as fp:
+                    for line in lines[0:5:]: fp.write("{}".format(line))
+                    els = [s.split('/')[0].split('_')[0] for s in lines[5].split(" ") if s.strip()!=""] 
+                    for el in els:
+                        fp.write(" {}".format(el))
+                    fp.write("\n")
+                    for line in lines[6::]: fp.write("{}".format(line))
 
             if not self.noel :
               if not os.path.exists(os.path.join(yphondir, calc, self.doscar)) :
