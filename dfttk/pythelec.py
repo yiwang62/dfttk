@@ -1454,6 +1454,7 @@ class thelecMDB():
             with open(Cij, "r") as f:
                 lines = f.readlines()
                 if len(lines)!=6: continue
+            if vol_within(vol,self.VCij,thr=1.e-3): continue
             Cij = []
             for line in lines:
                 Cij.append([float(cij) for cij in line.split() if cij.strip()!=""])
