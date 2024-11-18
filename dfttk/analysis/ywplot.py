@@ -1716,7 +1716,7 @@ def Phonon298(dir0, pvdos=False):
   os.chdir( phdir298 )
 
   cmd = "Yphon -tranI 2 -eps -nqwave "+ str(nqwave)+ " <superfij.out"
-  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
   output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
   #print(output)
@@ -1726,7 +1726,7 @@ def Phonon298(dir0, pvdos=False):
 
   if pvdos:
     cmd = "Yphon -tranI 2 -eps -pvdos -nqwave "+ str(nqwave/4)+ " <superfij.out"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
     output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True)
     #print(output)
@@ -1784,7 +1784,7 @@ def Phonon298(dir0, pvdos=False):
       cmd = "Yphon -Gfile symmetry.mode -tranI 2 -eps -pdis "+dfile0+ " <superfij.out >symmetry.out"
     else:
       cmd = "Yphon -tranI 2 -eps -pdis "+dfile0+ " <superfij.out >symmetry.out"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
 
     output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True)
@@ -2317,7 +2317,7 @@ def plotRaman(folder, fp, vdos, plottitle=None):
     except:
       pass
     if cm!=0: gamma_phonons[kk] = [cm, active]
-  #print(I,M,F,A)
+  #print("xxxxxxxxxxxxx", I,M,F,A)
   x = vdos[:,0]*1.e-12/0.0299792458
   y = vdos[:,1]*1.e+12*0.0299792458
   yy = np.zeros((len(y)), dtype=float)
@@ -2430,8 +2430,9 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
   for root, dirs, files in os.walk(ydir):
     for dir in dirs:
       poscar = os.path.join(ydir,dir,'POSCAR')
+      fij = os.path.join(ydir,dir,'superfij.out')
 
-      if os.path.exists(poscar):
+      if os.path.exists(fij) and os.path.exists(poscar):
         structure = Structure.from_file(poscar)
         vol = 'V{:010.6f}'.format(structure.volume)
         vdict[vol]=dir
@@ -2486,12 +2487,45 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
   cwd = os.getcwd()
   os.chdir( phdir298 )
 
+  if os.path.exists("dielecfij.out"):
+      with open("superfij.out", "r") as fp:
+          lines = fp.readlines()
+      prim_cell = []
+      for line in lines:
+          if line.strip().startswith("#"): continue
+          for x in [float(y) for y in line.split(" ") if y.strip()!=""]:
+              prim_cell.append(x)
+          if len(prim_cell)==9: break
+  
+      with open("dielecfij.out", "r") as fp:
+          lines = fp.readlines()
+      born_cell = []
+      for ii in range(0,3):
+          for x in [float(y) for y in lines[ii].split(" ") if y.strip()!=""]:
+              born_cell.append(x)
+  
+      prim_cell = np.hstack(prim_cell).reshape(3,3)
+      born_cell = np.hstack(born_cell).reshape(3,3)
+      born_cell = np.linalg.inv(born_cell)
+      pMatrix = np.matmul(prim_cell,  born_cell)
+      if abs(np.linalg.det(pMatrix)-1.0) < 0.6:
+          pMatrix = pMatrix.reshape(9)
+          cmd = "Yredu <dielecfij.out >dielecfijP.out -mat"
+          for x in pMatrix:
+              cmd = cmd + " " + str(round(x,3))
+          print(cmd)
+          output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                      universal_newlines=True)
+          os.system("mv -f dielecfij.out dielecfijO.out")
+          os.system("mv -f dielecfijP.out dielecfij.out")
+
   _nqwave = ""
   if debug:
       _nqwave = "-nqwave "+ str(1.e4)
   cmd = "Yphon -tranI 2 -eps "+ _nqwave+ " <superfij.out"
-  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.003'
   #cmd = "Yphon -tranI 2 -eps " + " <superfij.out"
+  #print("xxxxxxxxxxx", os.getcwd(), cmd)
   if not (debug and os.path.exists('vdos.out')):
     try:
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -2507,29 +2541,33 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
     except subprocess.TimeoutExpired:
       print(f'Timeout for {cmd} ({timeout}s) expired')
 
-  if not os.path.exists('symmetry.mode'):
-    if platform.system()=="Linux":
-      cmd = "pos2s Symmetry.pos -THR 0.001"
+  try:
+    makeraman = not os.path.exists('symmetry.mode')
+    if makeraman:
+      if platform.system()=="Linux":
+        cmd = "pos2s Symmetry.pos -THR 0.003"
+        output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                      universal_newlines=True, timeout=timeout)
+        #print(output)
+    """
+    #temp for debug
+    """
+    #temp for debug
+  
+    if os.path.exists("vdos.out") and platform.system()=="Linux":
+      cmd = "Yphon -tranI 2 -eps -nqwave 100 -Gfile symmetry.mode <superfij.out >Raman.mode"
+      if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.003'
+      move("vdos.out", 'vdos.sav')
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    universal_newlines=True)
-      #print(output)
-  """
-  #temp for debug
-  """
-  #temp for debug
-
-  if os.path.exists("vdos.out") and platform.system()=="Linux":
-    cmd = "Yphon -tranI 2 -eps -nqwave 100 -Gfile symmetry.mode <superfij.out >Raman.mode"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
-    move("vdos.out", 'vdos.sav')
-    output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    universal_newlines=True)
-    #print(output)
-    move("vdos.sav", 'vdos.out')
-    vdos = np.loadtxt("vdos.out", comments="#", dtype=float)
-    if os.path.exists("Raman.mode") :
-      with open ("Raman.mode", "r") as fp:
-        plotRaman(os.path.join(cwd,folder), fp, vdos, plottitle=plottitle)
+                      universal_newlines=True)
+      #print("xxxxxxxxxxxx Raman", output)
+      move("vdos.sav", 'vdos.out')
+      vdos = np.loadtxt("vdos.out", comments="#", dtype=float)
+      if os.path.exists("Raman.mode") :
+        with open ("Raman.mode", "r") as fp:
+          plotRaman(os.path.join(cwd,folder), fp, vdos, plottitle=plottitle)
+  except subprocess.TimeoutExpired:
+    print(f'Timeout for {cmd} ({timeout}s) expired')
 
   dfile = ""
   if ngroup>=1 and ngroup<=2:
@@ -2555,7 +2593,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
     head,dfile0 = os.path.split(dfile)
     copyfile(dfile,dfile0)
     cmd = "Yphon -tranI 2 -eps -pdis "+dfile0+ " <superfij.out"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
+    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.003'
     try:
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                         universal_newlines=True, timeout=timeout)
@@ -2594,7 +2632,7 @@ def PlotVol(folder, vdosdir):
   cwd = os.getcwd()
   os.chdir( vdosdir )
   cmd = "Yphon -tranI 2 -eps -nqwave "+ str(nqwave)+ " <superfij.out"
-  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
   output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
   #print(output)
@@ -2618,7 +2656,7 @@ def PlotVol(folder, vdosdir):
   if os.path.exists("vdos.out") and platform.system()=="Linux":
     move("vdos.out", 'vdos.sav')
     cmd = "Yphon -tranI 2 -eps -nqwave 100 -Gfile symmetry.mode <superfij.out >Raman.mode"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
     output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     universal_newlines=True)
     #print(output)
@@ -2652,7 +2690,7 @@ def PlotVol(folder, vdosdir):
     head,dfile0 = os.path.split(dfile)
     copyfile(dfile,dfile0)
     cmd = "Yphon -tranI 2 -eps -pdis "+dfile0+ " <superfij.out"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out'
+    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec'
     output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True)
     #print(output)

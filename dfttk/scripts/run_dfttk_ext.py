@@ -340,7 +340,7 @@ def shared_aguments(pthelec):
                       help="number of temperatures, used together with -td -50. \n"
                            "Default: 257")
     pthelec.add_argument("-timeout", "--timeout", dest="timeout", nargs="?", type=int, default=None,
-                      help="time limit for subprocess, default -1 means no time limit \n"
+                      help="time limit for subprocess, default None means no time limit \n"
                            "Default: None")
     pthelec.add_argument("-e", "--everyT", dest="everyT", nargs="?", type=int, default=1,
                       help="number of temperature points skipped from QHA analysis from the qha/qha_phonon collection. \n"
