@@ -2512,7 +2512,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
           pMatrix = pMatrix.reshape(9)
           cmd = "Yredu <dielecfij.out >dielecfijP.out -mat"
           for x in pMatrix:
-              cmd = cmd + " " + str(round(x,3))
+              cmd = cmd + " " + str(round(x,2))
           print(cmd)
           output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True)
@@ -2523,7 +2523,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
   if debug:
       _nqwave = "-nqwave "+ str(1.e4)
   cmd = "Yphon -tranI 2 -eps "+ _nqwave+ " <superfij.out"
-  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.003'
+  if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.03'
   #cmd = "Yphon -tranI 2 -eps " + " <superfij.out"
   #print("xxxxxxxxxxx", os.getcwd(), cmd)
   if not (debug and os.path.exists('vdos.out')):
@@ -2545,7 +2545,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
     makeraman = not os.path.exists('symmetry.mode')
     if makeraman:
       if platform.system()=="Linux":
-        cmd = "pos2s Symmetry.pos -THR 0.003"
+        cmd = "pos2s Symmetry.pos -THR 0.03"
         output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True, timeout=timeout)
         #print(output)
@@ -2556,7 +2556,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
   
     if os.path.exists("vdos.out") and platform.system()=="Linux":
       cmd = "Yphon -tranI 2 -eps -nqwave 100 -Gfile symmetry.mode <superfij.out >Raman.mode"
-      if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.003'
+      if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.03'
       move("vdos.out", 'vdos.sav')
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True)
@@ -2593,7 +2593,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
     head,dfile0 = os.path.split(dfile)
     copyfile(dfile,dfile0)
     cmd = "Yphon -tranI 2 -eps -pdis "+dfile0+ " <superfij.out"
-    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.003'
+    if os.path.exists('dielecfij.out') : cmd = cmd + ' -Born dielecfij.out -bvec -thr2 0.03'
     try:
       output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                         universal_newlines=True, timeout=timeout)
