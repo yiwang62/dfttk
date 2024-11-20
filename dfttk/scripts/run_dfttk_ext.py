@@ -247,7 +247,7 @@ def record_cmd_print(fdir, readme, dir=None):
             myjsonout(readme, fp, indent="", comma="")
 
         if "ERROR" in readme.keys():
-            error ="**********FATAL ERROR encountered, you may check readme and E-V plot in the folder "+dir+"/figures"
+            error ="**********FATAL ERROR encountered, you may check readme, compare DOSCAR (if any) in different volumes, compare vdos.out (if any) in different volumes, or check E-V plot in the folder "+dir+"/figures"
             volumes = readme['E-V']['volumes']
             energies = readme['E-V']['energies']
             natoms = readme['E-V']['natoms']

@@ -24,6 +24,7 @@ from scipy.interpolate import UnivariateSpline
 from atomate.vasp.database import VaspCalcDb
 from pymatgen.core import Structure
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.eos import EOS
 import dfttk.pyphon as ywpyphon
 from dfttk.utils import sort_x_by_y
 from dfttk.analysis.ywplot import myjsonout
@@ -2806,22 +2807,32 @@ class thelecMDB():
         electron_volt = physical_constants["electron volt"][0]
         angstrom = 1e-30
         toGPa = electron_volt/angstrom*1.e-9
+        eos = EOS("vinet")
+        ev_eos_fit = eos.fit(self.volumes, self.energies)
+        v0 = ev_eos_fit.v0
+        b0 = ev_eos_fit.b0
+        Static_Cij = np.zeros((6, 6), dtype=float)
         for i in range(6):
             for j in range(6):
                 if len(self.VCij)==1:
                     self.Cij_T[:,i,j] = self.Cij[0,i,j]
+                    Static_Cij[i,j] = self.Cij[0,i,j]
                 elif len(self.VCij)==2:
                     f2 = interp1d(self.VCij, self.Cij[:,i,j], kind='slinear')
                     self.Cij_T[:,i,j] = f2(self.volT[0:nT])
+                    Static_Cij[i,j] = f2(v0)
                 elif len(self.VCij)==3:
                     f2 = interp1d(self.VCij, self.Cij[:,i,j], kind='quadratic')
                     self.Cij_T[:,i,j] = f2(self.volT[0:nT])
+                    Static_Cij[i,j] = f2(v0)
                 elif len(self.VCij)==4:
                     f2 = interp1d(self.VCij, self.Cij[:,i,j], kind='cubic')
                     self.Cij_T[:,i,j] = f2(self.volT[0:nT])
+                    Static_Cij[i,j] = f2(v0)
                 else:
                     f2 = splrep(self.VCij, self.Cij[:,i,j])
                     self.Cij_T[:,i,j] = splev(self.volT[0:nT], f2)
+                    Static_Cij[i,j] = splev(v0, f2)
         """
         if True:
                     print ("db_file",self.VCij)
@@ -2901,6 +2912,62 @@ class thelecMDB():
                     (T[i], self.volT[i]/self.natoms, self.blat[i]*toGPa, \
                     m[0,0], m[0,1], m[3,3], \
                     self.Young_Modulus_Cij[i], self.Shear_Modulus_Cij[i], self.Bulk_Modulus_Cij[i]),file=fp)
+
+        with open (self.phasename+'/Static_Cij', 'w') as fp:
+            ngroup = self.space_group_number
+            E,G,B,Poisson_Ratio = self.Cij_to_Moduli(Static_Cij)
+
+            if ngroup>=1 and ngroup<=2: #for Triclinic system
+                fp.write('# T(K) V(Ang^3) B(GPa) C11 C12 C13 C14 C15 C16 C22 C23 C24 C25 C26 C33 C34'\
+                    ' C35 C36 C44 C45 C46 C55 C56 C66 E(GPa) G(GPa) B_correction_factor\n')
+                fm = "{} {:10.6f}"+" {:10.4f}"*(21+4)
+                m = Static_Cij
+                print(fm.format\
+                (0, v0/self.natoms, b0*toGPa, \
+                m[0,0], m[0,1], m[0,2], m[0,3], m[0,4], m[0,5], m[1,1], m[1,2], m[1,3], m[1,4], m[1,5], m[2,2], m[2,3], m[2,4], m[2,5], m[3,3], m[3,4], m[3,5], m[4,4], m[4,5], m[5,5], \
+                E,G,B),file=fp)
+            elif ngroup>=3 and ngroup<=15: # for Monoclinic system
+                fp.write('# T(K) V(Ang^3) B(GPa) C11 C12 C13 C16 C22 C23 C26 C33 C36 C44 C45 C55 C66'\
+                    ' E(GPa) G(GPa) B_correction_factor\n')
+                fm = "{} {:10.6f}"+" {:10.4f}"*(13+4)
+                m = Static_Cij
+                print(fm.format\
+                (0, v0/self.natoms, b0*toGPa, \
+                m[0,0], m[0,1], m[0,2], m[0,5], m[1,1], m[1,2], m[1,5], m[2,2], m[2,5], m[3,3], m[3,4], m[4,4], m[5,5], \
+                E,G,B),file=fp)
+            elif ngroup>=16 and ngroup<=74: # for Orthorhombic system
+                fp.write('# T(K) V(Ang^3) B(GPa) C11 C12 C13 C22 C23 C33 C44 C55 C66 E(GPa) G(GPa) B_correction_factor\n')
+                fm = "{} {:10.6f}"+" {:10.4f}"*(9+4)
+                m = Static_Cij
+                print(fm.format\
+                (0, v0/self.natoms, b0*toGPa, \
+                m[0,0], m[0,1], m[0,2], m[1,1], m[1,2], m[2,2], m[3,3], m[4,4], m[5,5],\
+                E,G,B),file=fp)
+            elif ngroup>=75 and ngroup<=142: # for Tetragonal system
+                fp.write('# T(K) V(Ang^3) B(GPa) C11 C12 C13 C33 C44 C66 E(GPa) G(GPa) B_correction_factor\n')
+                fm = "{} {:10.6f}"+" {:10.4f}"*(6+4)
+                m = Static_Cij
+                print(fm.format\
+                (0, v0/self.natoms, b0*toGPa, \
+                m[0,0], m[0,1], m[0,2], m[2,2], m[3,3], m[5,5],\
+                E,G,B),file=fp)
+            elif ngroup>=143 and ngroup<=194: # for Trigonal system
+                fp.write('# T(K) V(Ang^3) B(GPa) C11 C12 C13 C33 C44 E(GPa) G(GPa) B_correction_factor\n')
+                fm = "{} {:10.6f}"+" {:10.4f}"*(5+4)
+                m = Static_Cij
+                print(fm.format\
+                (0, v0/self.natoms, b0*toGPa, \
+                m[0,0], m[0,1], m[0,2], m[2,2], m[3,3],\
+                E,G,B),file=fp)
+            #elif ngroup>=168 and ngroup<=194: # for Hexagonal system
+            elif ngroup>=195 and ngroup<=230: # for cubic system
+                fp.write('# T(K) V(Ang^3) B(GPa) C11 C12 C44 E(GPa) G(GPa) B_correction_factor\n')
+                fm = "{} {:10.6f}"+" {:10.4f}"*(3+4)
+                m = Static_Cij
+                print(fm.format\
+                (0, v0/self.natoms, b0*toGPa, \
+                m[0,0], m[0,1], m[3,3], \
+                E,G,B),file=fp)
 
         with open (self.phasename+'/fvib_Mii_T', 'w') as fp:
             fp.write('# T(K) V(Ang^3) B(GPa) M1(GPa) M2(GPa) M3(GPa) M4(GPa) M5(GPa) M6(GPa)'
