@@ -55,7 +55,7 @@ def pngplot(cmd):
     with open (pngfile,"w") as f:
       for line in lines:
         if line.startswith("set terminal"):
-            f.write('{}\n'.format("set terminal png font Times_Roman 96 size 4096,3072 linewidth 7"))
+            f.write('{}\n'.format('set terminal pngpngcairo font "Times_Roman,96" size 4096,3072 linewidth 7'))
         elif line.startswith("set encoding"):
             f.write('{}\n'.format("set encoding utf8"))
         elif line.startswith("set output"):
@@ -72,7 +72,6 @@ def pngplot(cmd):
 
 def plot(cmd):
     cmd0, cmd1 = pngplot(cmd)
-    #print("ssssssss",cmd0,cmd1)
     output0 = subprocess.run(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         universal_newlines=True)
     print(output0)
@@ -1703,7 +1702,8 @@ def Phonon298(dir0, pvdos=False):
   i1 = min(i1, len(volumes)-2)
   dV = float(volumes[i1+1]) - float(volumes[i1])
   ff1 = (float(volumes[i1+1]) - V298)/dV
-  cmd = "Ymix -mlat -f "+str(ff1)+ " " \
+  vfac = (V298/float(volumes[i1]))**(1./3.)
+  cmd = "Ymix -f "+str(ff1)+ " -vfac "+ str(vfac) + " " \
       + os.path.join(dir0,Pfiles[i1],"superfij.out") + " " \
       + os.path.join(dir0,Pfiles[i1+1],"superfij.out") + " >" \
       + os.path.join(phdir298,"superfij.out")
@@ -2461,6 +2461,7 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
   i1 = min(i1, len(volumes)-2)
   dV = float(volumes[i1+1]) - float(volumes[i1])
   ff1 = (float(volumes[i1+1]) - V298)/dV
+  vfac = (V298/float(volumes[i1]))**(1./3.)
 
   vol = 'V{:010.6f}'.format(float(natom*volumes[i1]))
   dir1 = vdict[vol]
@@ -2478,7 +2479,8 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
   phdir298 = os.path.join(ydir,'Phonon298.15')
   if not os.path.exists(phdir298):
       os.mkdir(phdir298)
-  cmd = "Ymix -mlat -f "+str(ff1)+ " "+file1+ " "+file2 +" >"+os.path.join(phdir298,"superfij.out")
+  cmd = "Ymix -f "+str(ff1)+ " -vfac "+ str(vfac) + " " \
+      +file1+ " "+file2 +" >"+os.path.join(phdir298,"superfij.out")
   output = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                       universal_newlines=True)
   #print(output)
@@ -2568,6 +2570,17 @@ def Plot298(folder, V298, volumes, debug=False, plottitle=None, local=None, time
           plotRaman(os.path.join(cwd,folder), fp, vdos, plottitle=plottitle)
   except subprocess.TimeoutExpired:
     print(f'Timeout for {cmd} ({timeout}s) expired')
+
+  if os.path.exists("findsym.log") :
+    with open("findsym.log") as fp:
+      lines = fp.readlines()
+      for line in lines:
+        if line.startswith("Space Group") :
+          ss = [s for s in line.split() if s.strip() != "" ]
+          if int(ss[2]) != ngroup:
+            print("\n Symmetry has changed into :", line)
+            ngroup = int(ss[2])
+            break  
 
   dfile = ""
   if ngroup>=1 and ngroup<=2:
