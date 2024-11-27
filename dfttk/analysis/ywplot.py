@@ -55,7 +55,7 @@ def pngplot(cmd):
     with open (pngfile,"w") as f:
       for line in lines:
         if line.startswith("set terminal"):
-            f.write('{}\n'.format('set terminal pngpngcairo font "Times_Roman,96" size 4096,3072 linewidth 7'))
+            f.write('{}\n'.format('set terminal pngcairo font "Times_Roman,96" size 4096,3072 linewidth 7'))
         elif line.startswith("set encoding"):
             f.write('{}\n'.format("set encoding utf8"))
         elif line.startswith("set output"):
